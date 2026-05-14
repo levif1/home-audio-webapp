@@ -1,0 +1,31 @@
+{
+  "name": "home-audio-webapp",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "devOld": "vite",
+    "dev:frontend": "vite",
+    "dev:backend": "nodemon api/server.js",
+    "dev": "concurrently 'npm:dev:frontend' 'npm:dev:backend'",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "net": "^1.0.2",
+    "vue": "^3.5.34",
+    "ws": "^8.20.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/tsconfig": "^0.9.1",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vue-tsc": "^3.2.8"
+  }
+}
