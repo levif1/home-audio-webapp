@@ -1,35 +1,19 @@
-const router = require('express').Router()
-const controller =
-    require('../controllers/bluetooth.controller')
+const router = require("express").Router();
+const controller = require("../controllers/bluetooth.controller");
 
-router.get(
-    '/status',
-    controller.status
-)
+router.get("/status", controller.status);
 
-router.get(
-    '/devices',
-    controller.devices
-)
+router.get("/devices", controller.devices);
 
-router.get(
-    '/pairedDevices',
-    controller.pairedDevices
-)
+router.get("/pairedDevices", controller.pairedDevices);
 
-router.post(
-    '/scan',
-    controller.scan
-)
+router.post("/scan", controller.scan);
 
-router.post(
-    '/connect',
-    controller.connect
-)
+router.post("/connect", controller.connect);
 
-router.post(
-    '/disconnect',
-    controller.disconnect
-)
+router.post("/disconnect", controller.disconnect);
 
-module.exports = router
+router.post("/discoverable", controller.makeDiscoverable);
+router.post("/undiscoverable", controller.makeUndiscoverable);
+
+module.exports = router;

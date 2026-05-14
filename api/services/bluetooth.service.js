@@ -1,142 +1,124 @@
-const { exec } = require('child_process')
+const { exec } = require("child_process");
 
 class BluetoothService {
+  run(command) {
+    return new Promise((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          reject(stderr || error.message);
+          return;
+        }
 
-    run(command) {
+        resolve(stdout.trim());
+      });
+    });
+  }
 
-        return new Promise((resolve, reject) => {
+  async getStatus() {
+    const output = await this.run(`bluetoothctl show`);
 
-            exec(command, (error, stdout, stderr) => {
+    return {
+      powered: output.includes("Powered: yes"),
+      discoverable: output.includes("Discoverable: yes"),
+      pairable: output.includes("Pairable: yes"),
+    };
+  }
 
-                if (error) {
-                    reject(stderr || error.message)
-                    return
-                }
+  async makeDiscoverable() {
+    const output = this.run(`bluetoothctl pairable on`)
+      .then(() => this.run(`bluetoothctl discoverable on`))
+      .then(() => this.run(`bluetoothctl agent on`))
+      .catch((err) => {
+        console.error("Error making Bluetooth discoverable:", err);
+        throw new Error("Failed to make Bluetooth discoverable");
+      });
 
-                resolve(stdout.trim())
-            })
-        })
-    }
+    return { discoverable: true };
+  }
 
-    async getStatus() {
+  async makeUndiscoverable() {
+    await this.run(`bluetoothctl discoverable off`);
+    return { discoverable: false };
+  }
 
-        const output = await this.run(
-            `bluetoothctl show`
-        )
+  async scan() {
+    await this.run(`timeout 8 bluetoothctl scan on`);
+
+    const output = await this.run(`bluetoothctl devices`);
+
+    return output
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const match = line.match(/^Device\s([A-F0-9:]+)\s(.+)$/i);
+
+        if (!match) return null;
 
         return {
-            powered: output.includes('Powered: yes'),
-            discoverable: output.includes('Discoverable: yes'),
-            pairable: output.includes('Pairable: yes')
-        }
-    }
+          mac: match[1],
+          name: match[2],
+        };
+      })
+      .filter(Boolean);
+  }
 
-    async scan() {
+  async pairedDevices() {
+    const output = await this.run(`bluetoothctl devices Paired`);
 
-        await this.run(
-            `timeout 8 bluetoothctl scan on`
-        )
+    return output
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const match = line.match(/^Device\s([A-F0-9:]+)\s(.+)$/i);
 
-        const output = await this.run(
-            `bluetoothctl devices`
-        )
-
-        return output
-            .split('\n')
-            .filter(Boolean)
-            .map(line => {
-
-                const match = line.match(
-                    /^Device\s([A-F0-9:]+)\s(.+)$/i
-                )
-
-                if (!match) return null
-
-                return {
-                    mac: match[1],
-                    name: match[2]
-                }
-            })
-            .filter(Boolean)
-    }
-
-    async pairedDevices() {
-
-        const output = await this.run(
-            `bluetoothctl devices Paired`
-        )
-
-        return output
-            .split('\n')
-            .filter(Boolean)
-            .map(line => {
-
-                const match = line.match(
-                    /^Device\s([A-F0-9:]+)\s(.+)$/i
-                )
-
-                if (!match) return null
-
-                return {
-                    mac: match[1],
-                    name: match[2]
-                }
-            })
-            .filter(Boolean)
-    }
-
-    async connect(mac) {
-
-        await this.run(
-            `bluetoothctl trust ${mac}`
-        )
-
-        const result = await this.run(
-            `bluetoothctl connect ${mac}`
-        )
+        if (!match) return null;
 
         return {
-            success: result.includes('Connection successful'),
-            result
-        }
-    }
+          mac: match[1],
+          name: match[2],
+        };
+      })
+      .filter(Boolean);
+  }
 
-    async disconnect(mac) {
+  async connect(mac) {
+    await this.run(`bluetoothctl trust ${mac}`);
 
-        const result = await this.run(
-            `bluetoothctl disconnect ${mac}`
-        )
+    const result = await this.run(`bluetoothctl connect ${mac}`);
+
+    return {
+      success: result.includes("Connection successful"),
+      result,
+    };
+  }
+
+  async disconnect(mac) {
+    const result = await this.run(`bluetoothctl disconnect ${mac}`);
+
+    return {
+      success: true,
+      result,
+    };
+  }
+
+  async connectedDevices() {
+    const output = await this.run(`bluetoothctl devices Connected`);
+
+    return output
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const match = line.match(/^Device\s([A-F0-9:]+)\s(.+)$/i);
+
+        if (!match) return null;
 
         return {
-            success: true,
-            result
-        }
-    }
-
-    async connectedDevices() {
-
-        const output = await this.run(
-            `bluetoothctl devices Connected`
-        )
-
-        return output
-            .split('\n')
-            .filter(Boolean)
-            .map(line => {
-
-                const match = line.match(
-                    /^Device\s([A-F0-9:]+)\s(.+)$/i
-                )
-
-                if (!match) return null
-
-                return {
-                    mac: match[1],
-                    name: match[2]
-                }
-            })
-            .filter(Boolean)
-    }
+          mac: match[1],
+          name: match[2],
+        };
+      })
+      .filter(Boolean);
+  }
 }
 
-module.exports = new BluetoothService()
+module.exports = new BluetoothService();
