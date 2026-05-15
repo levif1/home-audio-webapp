@@ -13,7 +13,8 @@ router.post("/connect", controller.connect);
 
 router.post("/disconnect", controller.disconnect);
 
-router.post("/discoverable", controller.makeDiscoverable);
-router.post("/undiscoverable", controller.makeUndiscoverable);
+router.post("/discoverable", controller.discoverable);
+
+router.post("/undiscoverable", controller.undiscoverable);
 
 module.exports = router;

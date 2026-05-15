@@ -26,8 +26,14 @@ class BluetoothService {
 
   async makeDiscoverable() {
     const output = this.run(`bluetoothctl pairable on`)
-      .then(() => this.run(`bluetoothctl discoverable on`))
-      .then(() => this.run(`bluetoothctl agent on`))
+      .then((res) => {
+        console.log("Bluetooth pairable:", res);
+        return this.run(`bluetoothctl discoverable on`);
+      })
+      .then((res) => {
+        console.log("Bluetooth discoverable:", res);
+        return this.run(`bluetoothctl agent on`);
+      })
       .catch((err) => {
         console.error("Error making Bluetooth discoverable:", err);
         throw new Error("Failed to make Bluetooth discoverable");
